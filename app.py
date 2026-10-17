@@ -1,109 +1,183 @@
 import streamlit as st
 import datetime
+import requests
 
-# Page ki setting (Title aur Icon)
-st.set_page_config(page_title="Kundali Analyzer", page_icon="🔮", layout="centered")
+# --- PAGE CONFIGURATION ---
+st.set_page_config(page_title="Astro Kundali | Premium", page_icon="✨", layout="centered")
 
-# Custom CSS (Design thoda sundar karne ke liye)
+# --- CUSTOM CSS (HTML/CSS Design) ---
 st.markdown("""
     <style>
-    .main {
-        background-color: #f9f9f9;
+    /* Main Background */
+    .stApp {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: white;
     }
+    
+    /* Headings */
+    h1, h2, h3 {
+        color: #ffffff !important;
+        text-align: center;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 700;
+    }
+    
+    /* Glassmorphism Card Effect */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        text-align: center;
+        margin-top: 50px;
+    }
+    
+    /* Button Styling */
     .stButton>button {
-        background-color: #ff4b4b;
+        background: linear-gradient(90deg, #ff4b4b, #ff7676);
+        color: white !important;
+        border: none;
+        border-radius: 30px;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(255, 75, 75, 0.4);
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+    }
+    
+    .stButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(255, 75, 75, 0.6);
+        color: white;
+    }
+
+    /* Input Fields Styling */
+    .stTextInput>div>div>input, .stDateInput>div>div>input, .stTimeInput>div>div>input {
+        background-color: rgba(255, 255, 255, 0.1);
         color: white;
         border-radius: 10px;
-        height: 50px;
-        width: 100%;
-        font-size: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .stButton>button:hover {
-        background-color: #ff3333;
+    
+    /* Success/Info Alerts */
+    .stAlert {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
         color: white;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: rgba(255,255,255,0.2);
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Heading
-st.title("🔮 Astro Kundali Generator")
-st.write("Apni details bharein aur apni basic kundali ka analysis dekhein. (Demo Version)")
+# --- STATE MANAGEMENT (Page change karne ke liye) ---
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+if "user_data" not in st.session_state:
+    st.session_state.user_data = {}
 
-st.divider() # Ek line design ke liye
+# API Key
+API_KEY = "13f7f206140dc61917532f1cdbd03421eab2ac967216fe5d50c89b386de12713" # <--- Yahan apni key daalna
 
-# Form banate hain taaki ek saath data mile
-with st.form("kundali_form"):
-    col1, col2 = st.columns(2)
+# --- PAGE 1: HOME (LANDING PAGE) ---
+if st.session_state.page == "home":
+    st.markdown("""
+        <div class="glass-card">
+            <h1>✨ Discover Your Destiny ✨</h1>
+            <p style='font-size: 18px; color: #cccccc; margin-bottom: 30px;'>
+                Unlock the secrets of the cosmos. Get your accurate birth chart, planetary positions, and Nakshatra analysis based on Vedic Astrology.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    with col1:
+    st.write("") # Space
+    st.write("") 
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("View Your Kundali 🔮"):
+            st.session_state.page = "form"
+            st.rerun()
+
+# --- PAGE 2: FORM ---
+elif st.session_state.page == "form":
+    st.markdown("<h1>Enter Your Details</h1>", unsafe_allow_html=True)
+    
+    with st.form("kundali_form"):
         name = st.text_input("👤 Apna Naam likhein:")
         dob = st.date_input("📅 Date of Birth:", min_value=datetime.date(1950, 1, 1), max_value=datetime.date.today())
-    
-    with col2:
         time = st.time_input("⏰ Janm ka samay (Birth Time):")
         place = st.text_input("📍 Janm Sthan (Birthplace):", placeholder="e.g., Delhi, Mumbai")
 
-    # Submit Button
-    submit = st.form_submit_button("Kundali Nikalein ✨")
+        col1, col2 = st.columns(2)
+        with col1:
+            submit = st.form_submit_button("Generate Kundali ✨")
+        with col2:
+            back = st.form_submit_button("← Go Back")
 
-# Agar user button dabata hai
-if submit:
-    if name and place:
-        st.success(f"Namaste **{name}**! Aapki details mil gayi hain.")
-        
-        # Zodiac Sign nikalne ka logic (Date of Birth ke hisaab se)
-        day = dob.day
-        month = dob.month
-        
-        if (month == 3 and day >= 21) or (month == 4 and day <= 19):
-            sun_sign = "Mesh (Aries) ♈"
-            element = "Agni (Fire)"
-        elif (month == 4 and day >= 20) or (month == 5 and day <= 20):
-            sun_sign = "Vrishabh (Taurus) ♉"
-            element = "Prithvi (Earth)"
-        elif (month == 5 and day >= 21) or (month == 6 and day <= 20):
-            sun_sign = "Mithun (Gemini) ♊"
-            element = "Vayu (Air)"
-        elif (month == 6 and day >= 21) or (month == 7 and day <= 22):
-            sun_sign = "Kark (Cancer) ♋"
-            element = "Jal (Water)"
-        elif (month == 7 and day >= 23) or (month == 8 and day <= 22):
-            sun_sign = "Simha (Leo) ♌"
-            element = "Agni (Fire)"
-        elif (month == 8 and day >= 23) or (month == 9 and day <= 22):
-            sun_sign = "Kanya (Virgo) ♍"
-            element = "Prithvi (Earth)"
-        elif (month == 9 and day >= 23) or (month == 10 and day <= 22):
-            sun_sign = "Tula (Libra) ♎"
-            element = "Vayu (Air)"
-        elif (month == 10 and day >= 23) or (month == 11 and day <= 21):
-            sun_sign = "Vrishchik (Scorpio) ♏"
-            element = "Jal (Water)"
-        elif (month == 11 and day >= 22) or (month == 12 and day <= 21):
-            sun_sign = "Dhanu (Sagittarius) ♐"
-            element = "Agni (Fire)"
-        elif (month == 12 and day >= 22) or (month == 1 and day <= 19):
-            sun_sign = "Makar (Capricorn) ♑"
-            element = "Prithvi (Earth)"
-        elif (month == 1 and day >= 20) or (month == 2 and day <= 18):
-            sun_sign = "Kumbh (Aquarius) ♒"
-            element = "Vayu (Air)"
+    if back:
+        st.session_state.page = "home"
+        st.rerun()
+
+    if submit:
+        if name and place:
+            with st.spinner("Analyzing Stars and Planets..."):
+                url = "https://api.freeastroapi.com/api/v1/natal/calculate"
+                payload = {
+                    "year": dob.year, "month": dob.month, "day": dob.day,
+                    "hour": time.hour, "minute": time.minute, "city": place
+                }
+                headers = {"Content-Type": "application/json", "x-api-key": API_KEY}
+
+                try:
+                    response = requests.post(url, json=payload, headers=headers)
+                    if response.status_code == 200:
+                        st.session_state.user_data = {
+                            "name": name,
+                            "dob": dob.strftime('%d %b %Y'),
+                            "time": time.strftime('%I:%M %p'),
+                            "place": place,
+                            "api_data": response.json() 
+                        }
+                        st.session_state.page = "result"
+                        st.rerun()
+                    else:
+                        st.error(f"API Error: {response.status_code} - {response.text}")
+                except Exception as e:
+                    st.error(f"Error: {e}")
         else:
-            sun_sign = "Meen (Pisces) ♓"
-            element = "Jal (Water)"
+            st.error("Bhai, Naam aur Janm Sthan bharna zaroori hai!")
 
-        st.divider()
-        st.subheader("📜 Aapki Basic Report")
-        
-        # Result ko sundar tarike se dikhana
-        col_res1, col_res2, col_res3 = st.columns(3)
-        col_res1.metric(label="Naam", value=name)
-        col_res2.metric(label="Surya Rashi", value=sun_sign)
-        col_res3.metric(label="Tatva (Element)", value=element)
-        
-        st.info(f"📅 **Aapka Janm:** {dob.strftime('%d %B %Y')} ko {time.strftime('%I:%M %p')} baje, {place} mein hua tha.")
-        
-        st.warning("⚠️ **Note:** Ye ek demo calculation hai. Professional Grah, Nakshatra aur Lagna ki calculation ke liye humein Astrology API connect karni hogi.")
-        
-    else:
-        st.error("Bhai, 'Naam' aur 'Janm Sthan' bharna mat bhoolna!")
+# --- PAGE 3: RESULT ---
+elif st.session_state.page == "result":
+    data = st.session_state.user_data
+    
+    st.markdown(f"""
+        <div class="glass-card">
+            <h2>🌟 Kundali Report 🌟</h2>
+            <h3 style='color: #ff7676 !important;'>{data['name']}</h3>
+            <p>📅 {data['dob']} | ⏰ {data['time']} | 📍 {data['place']}</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.write("")
+    st.subheader("Planetary Positions (Raw API Data)")
+    
+    # Yahan hum API se aaya hua data dikha rahe hain
+    # Jaise hi tumhe JSON ka screenshot dikhega, hum isko sundar cards mein badal denge
+    st.json(data['api_data'])
+    
+    st.write("")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("← Check Another Kundali"):
+            st.session_state.page = "home"
+            st.session_state.user_data = {}
+            st.rerun()
