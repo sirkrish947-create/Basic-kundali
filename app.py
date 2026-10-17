@@ -190,15 +190,19 @@ elif st.session_state.page == "result":
         "Saturn": "Shani", "Rahu": "Rahu", "Ketu": "Ketu", "Ascendant": "Lagna"
     }
 
-    # Lagna nikalna
-    lagna_sign = "Unknown"
-    if 'angles' in api_data and api_data['angles']:
+    # Lagna nikalna (Safe checking)
+    lagna_sign_raw = "Unknown"
+    if 'angles' in api_data and isinstance(api_data['angles'], list) and len(api_data['angles']) > 0:
         for angle in api_data['angles']:
-            if angle['name'] in ['Ascendant', 'Asc', 'Lagna']:
-                lagna_sign = angle['sign']
-                break
-                
-    lagna_hindi = rashi_map.get(lagna_sign, lagna_sign)
+            if isinstance(angle, dict) and 'name' in angle:
+                if angle['name'] in ['Ascendant', 'Asc', 'Lagna']:
+                    lagna_sign_raw = angle.get('sign', 'Unknown')
+                    break
+            elif isinstance(angle, dict) and 'sign' in angle:
+                 lagna_sign_raw = angle.get('sign', 'Unknown')
+                 break
+                 
+    lagna_hindi = rashi_map.get(lagna_sign_raw, lagna_sign_raw)
 
     # Header Card
     st.markdown(f"""
@@ -225,7 +229,7 @@ elif st.session_state.page == "result":
             p_sign_raw = planet.get('sign', 'Unknown')
             p_sign = rashi_map.get(p_sign_raw, p_sign_raw)
             
-            p_degree = planet.get('pos', 0)
+            p_degree = round(planet.get('pos', 0), 2)
             is_retro = planet.get('retrograde', False)
             
             emojis = {"Sun": "☀️", "Moon": "🌙", "Mercury": "☿️", "Venus": "♀️", 
