@@ -81,7 +81,7 @@ if "user_data" not in st.session_state:
 # ==========================================
 # YAHAN APNI API KEY DAALO (Quotes ke andar)
 # ==========================================
-API_KEY = "YOUR_API_KEY_HERE" 
+API_KEY = "13f7f206140dc61917532f1cdbd03421eab2ac967216fe5d50c89b386de12713" 
 # ==========================================
 
 # --- PAGE 1: HOME (LANDING PAGE) ---
