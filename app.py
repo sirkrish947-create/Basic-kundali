@@ -159,6 +159,7 @@ elif st.session_state.page == "form":
 elif st.session_state.page == "result":
     data = st.session_state.user_data
     
+    # --- HEADER CARD ---
     st.markdown(f"""
         <div class="glass-card">
             <h2>🌟 Kundali Report 🌟</h2>
@@ -168,13 +169,52 @@ elif st.session_state.page == "result":
     """, unsafe_allow_html=True)
     
     st.write("")
-    st.subheader("Planetary Positions (Raw API Data)")
     
-    # Yahan hum API se aaya hua data dikha rahe hain
-    # Jaise hi tumhe JSON ka screenshot dikhega, hum isko sundar cards mein badal denge
-    st.json(data['api_data'])
+    # --- GRAPH & PLANETS SECTION ---
+    st.markdown("<h3 style='text-align: left;'>🪐 Grah Dasha & Rashiyan</h3>", unsafe_allow_html=True)
     
+    # API response se planets ka data nikalna
+    planets_data = data['api_data'].get('planets', [])
+    
+    if planets_data:
+        # Planets ko 2 columns mein dikhane ke liye
+        cols = st.columns(2)
+        
+        for index, planet in enumerate(planets_data):
+            p_name = planet.get('name', 'Unknown')
+            p_sign = planet.get('sign', 'Unknown')
+            p_degree = planet.get('pos', 0)
+            is_retro = planet.get('retrograde', False)
+            
+            # Graho ke naam ke emojis
+            emojis = {"Sun": "☀️", "Moon": "🌙", "Mercury": "☿️", "Venus": "♀️", 
+                      "Mars": "♂️", "Jupiter": "♃", "Saturn": "♄", "Rahu": "☊", "Ketu": "☋"}
+            emoji = emojis.get(p_name, "🌟")
+            
+            # Retrograde (Vakri) check
+            retro_text = " (Vakri 🔄)" if is_retro else ""
+            
+            # Card Design
+            card_html = f"""
+            <div style="background: rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid #ff4b4b;">
+                <h4 style="margin: 0; color: #fff;">{emoji} {p_name}</h4>
+                <p style="margin: 5px 0 0 0; color: #ccc; font-size: 16px;">
+                    Rashi: <b>{p_sign}</b>{retro_text}<br>
+                    Degree: {p_degree}°
+                </p>
+            </div>
+            """
+            
+            # 2 columns mein alternate karke daalna
+            with cols[index % 2]:
+                st.markdown(card_html, unsafe_allow_html=True)
+    else:
+        st.error("Kundali ka data nahi mila.")
+
     st.write("")
+    st.write("")
+    
+    # --- BACK BUTTON ---
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("← Check Another Kundali"):
